@@ -10,16 +10,14 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 /* Global overflow fixes */
-html, body {
+html,
+body {
   overflow-x: hidden;
   max-width: 100%;
 }
@@ -34,43 +32,40 @@ table {
   table-layout: auto;
 }
 
-/* Comprehensive table container fixes */
-.overflow-x-auto {
+/* Comprehensive table and scroll container fixes */
+.overflow-x-auto,
+.custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-.overflow-x-auto::-webkit-scrollbar {
+.overflow-x-auto::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
   height: 6px;
 }
 
-.overflow-x-auto::-webkit-scrollbar-track {
+.overflow-x-auto::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: #f1f5f9;
-  border-radius: 3px;
+  border-radius: 10px;
 }
 
-.overflow-x-auto::-webkit-scrollbar-thumb {
+.overflow-x-auto::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 10px;
+  transition: background 0.2s;
 }
 
-.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+.overflow-x-auto::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
 /* Responsive container fixes */
-.container, .max-w-7xl, .max-w-6xl, .max-w-5xl, .max-w-4xl {
-  overflow-x: hidden;
-}
-
-/* Card overflow fixes */
-.card, .bg-white, .bg-gray-50 {
-  overflow-x: hidden;
-}
-
-/* Space-y container overflow fixes */
-.space-y-1, .space-y-2, .space-y-3, .space-y-4, .space-y-6, .space-y-8 {
-  overflow-x: hidden;
+.container {
+  max-width: 100%;
 }
 
 @layer utilities {
@@ -78,19 +73,39 @@ table {
     text-wrap: balance;
   }
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .animate-fadeIn {

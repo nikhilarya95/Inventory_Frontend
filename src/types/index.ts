@@ -45,7 +45,7 @@ export interface Customer {
   customerId: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
   shopName: string;
   gst?: string;

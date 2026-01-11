@@ -21,7 +21,7 @@ import api from '@/lib/api';
 interface CustomerForm {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone: string;
   shopName: string;
   gst?: string;
@@ -70,7 +70,7 @@ export default function CustomersPage() {
       return (
         customer.shopName.toLowerCase().includes(query) ||
         ownerName.includes(query) ||
-        customer.email.toLowerCase().includes(query)
+        (customer.email || '').toLowerCase().includes(query)
       );
     }).sort((a, b) => {
       const ownerNameA = `${a.firstName} ${a.lastName}`;
@@ -135,7 +135,13 @@ export default function CustomersPage() {
         closeModal();
       }, 1500);
     } catch (error: any) {
-      setStatusMessage({ type: 'error', text: error.response?.data?.message || 'Error saving customer' });
+      let errorMessage = 'Error saving customer';
+      if (error.response?.data?.errors?.[0]?.msg) {
+        errorMessage = error.response.data.errors[0].msg;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      setStatusMessage({ type: 'error', text: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -407,10 +413,17 @@ export default function CustomersPage() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700">Email Address</label>
               <Input
-                {...register('email')}
+                {...register('email', {
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: 'Please enter a valid email address'
+                  }
+                })}
                 type="email"
                 placeholder="john@example.com"
+                className={errors.email ? 'border-red-500' : ''}
               />
+              {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-700">Phone Number</label>
@@ -524,7 +537,7 @@ export default function CustomersPage() {
                   <Receipt className="h-4 w-4 text-gray-500" />
                   <h4 className="font-bold text-gray-900">Pending Bills</h4>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-auto max-h-[300px] custom-scrollbar">
                   {isLoadingDetails ? (
                     <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
                   ) : customerBills.length > 0 ? (
@@ -569,7 +582,7 @@ export default function CustomersPage() {
                   <History className="h-4 w-4 text-gray-500" />
                   <h4 className="font-bold text-gray-900">Recent Payments</h4>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-auto max-h-[300px] custom-scrollbar">
                   {isLoadingDetails ? (
                     <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
                   ) : customerPayments.length > 0 ? (

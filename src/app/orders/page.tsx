@@ -3616,6 +3616,10 @@ export default function OrdersPage() {
       items: initialItems,
     });
 
+    if (order.customer?._id) {
+      checkCustomerCredit(order.customer._id);
+    }
+
     const productIds = Array.from(new Set(initialItems.map(item => item.product)));
     const newStockList: Record<string, Stock[]> = {};
 
@@ -4148,7 +4152,7 @@ export default function OrdersPage() {
                 <button
                   type="button"
                   onClick={addItem}
-                  disabled={!formData.customer}
+                  disabled={!formData.customer || (creditCheck && !creditCheck.canCreateBill)}
                   className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-all duration-200 disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
@@ -4164,11 +4168,11 @@ export default function OrdersPage() {
               </div>
             )}
 
-            <div className={`space-y-3 ${!formData.customer && !selectedOrder ? 'opacity-50 pointer-events-none' : ''}`}>
+            <div className={`space-y-3 ${(!formData.customer && !selectedOrder) || (creditCheck && !creditCheck.canCreateBill) ? 'opacity-50 pointer-events-none' : ''}`}>
               {formData.items.map((item, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in group/item"
+                  className="grid grid-cols-1 md:grid-cols-12 gap-2.5 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 animate-fade-in group/item"
                 >
                   <div className="md:col-span-4">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Product</label>
@@ -4177,9 +4181,10 @@ export default function OrdersPage() {
                       onChange={e => onProductSelect(index, e.target.value)}
                       options={[{ value: '', label: 'Search & Select Product' }, ...products.map(p => ({ value: p._id, label: `${p.brandName} - ${p.productName}` }))]}
                       disabled={!!selectedOrder && selectedOrder.status !== 'Pending'}
+                      showSearch={true}
                     />
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="md:col-span-4">
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Stock Batch</label>
                     <Select
                       value={item.stock}
@@ -4187,12 +4192,12 @@ export default function OrdersPage() {
                       onChange={e => onStockSelect(index, e.target.value)}
                       options={[(stockList[item.product]?.length > 0) ? { value: '', label: 'Select batch' } : { value: '', label: 'No stock' }, ...(stockList[item.product] || []).map(s => ({
                         value: s._id,
-                        label: `Batch: ${s.batchNumber} | Qty: ${s.quantity} | ${s.discount}% Off`
+                        label: `${s.weight}${s.weightUnit} • Qty: ${s.quantity} • ${formatDate(s.expiryDate)}`
                       }))]}
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Qty</label>
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1 text-center">Qty</label>
                     <Input
                       type="number"
                       min={1}
@@ -4205,24 +4210,28 @@ export default function OrdersPage() {
                         if (val < 1) val = 1;
                         updateItem(index, 'quantity', val);
                       }}
-                      className="text-center font-bold"
+                      className="text-center font-bold px-1 h-[40px]"
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">Price/Disc</label>
-                    <div className="h-[46px] flex flex-col justify-center px-3 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
-                      <p className="text-[10px] text-gray-400 line-through leading-none mb-1">{formatCurrency(item.mrp || 0)}</p>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-bold text-blue-600 leading-none">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1 text-center">Price/Disc</label>
+                    <div className="h-[40px] flex flex-col justify-center px-1.5 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                      {(item.discount || 0) > 0 && (
+                        <p className="text-[9px] text-gray-400 line-through leading-none mb-0.5 text-center">{formatCurrency(item.mrp || 0)}</p>
+                      )}
+                      <div className="flex items-center justify-center gap-1">
+                        <p className="text-xs font-bold text-blue-600 leading-none">
                           {formatCurrency((item.mrp || 0) * (1 - (item.discount || 0) / 100))}
                         </p>
-                        <span className="text-[10px] font-bold px-1 py-0.5 bg-green-100 text-green-700 rounded-md">
-                          -{item.discount || 0}%
-                        </span>
+                        {(item.discount || 0) > 0 && (
+                          <span className="text-[8px] font-bold px-0.5 py-0.5 bg-green-100 text-green-700 rounded">
+                            -{item.discount}%
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="md:col-span-1 border-l border-gray-100 pl-4 flex items-center justify-center">
+                  <div className="md:col-span-1 border-l border-gray-100 pl-2 flex items-center justify-center pt-6">
                     {(!selectedOrder || selectedOrder.status === 'Pending') && formData.items.length > 1 && (
                       <button
                         type="button"
@@ -4275,6 +4284,7 @@ export default function OrdersPage() {
             <Button
               type="submit"
               isLoading={isSubmitting}
+              disabled={!!(creditCheck && !creditCheck.canCreateBill && !selectedOrder)}
               className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:scale-105 transition-all duration-200 shadow-lg"
             >
               {selectedOrder ? 'Update Order' : 'Create Order'}
@@ -4402,6 +4412,6 @@ export default function OrdersPage() {
           </div>
         </div>
       </Modal>
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

@@ -62,7 +62,7 @@ export default function SettingsPage() {
       });
     }
     loadCompany();
-  }, [user]);
+  }, [user, profileForm.reset]);
 
   const loadCompany = async () => {
     try {

@@ -1926,12 +1926,17 @@ export default function PaymentsPage() {
       setStatusMessage({ type: 'error', text: "Amount must be greater than 0." });
       return;
     }
+     if (new Date(formData.transactionDate) > new Date()) {
+      setStatusMessage({ type: 'error', text: "Transaction date cannot be in the future." });
+      return;
+    }
     // Final check for the sequential payment rule before hitting the backend
     if (firstUnpaidBillId && formData.bill !== firstUnpaidBillId) {
       const firstBill = customerBills.find(b => b._id === firstUnpaidBillId);
       setStatusMessage({ type: 'error', text: `Payment rejected. The backend requires Bill ${firstBill?.billId} to be paid first.` });
       return;
     }
+   
 
 
     try {

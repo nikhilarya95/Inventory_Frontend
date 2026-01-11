@@ -852,7 +852,7 @@ export default function BillsPage() {
 
             <div>
               <h4 className="font-semibold text-gray-900 text-lg mb-4">Items</h4>
-              <div className="overflow-x-auto border border-gray-100 rounded-lg">
+              <div className="overflow-auto max-h-[300px] border border-gray-100 rounded-lg custom-scrollbar">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
